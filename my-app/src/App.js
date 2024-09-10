@@ -113,7 +113,7 @@ const App = () => {
         </div>
         {schemas.length > 0 && schemas.map((schema, index) => (
           <div key={index} className="schema-item">
-            <Select value={schema} style={{ width: 'calc(100% - 30px)', marginRight: 10 }} disabled>
+            <Select value={schema} style={{ width: 'calc(100% - 30px)', marginRight: 10 }}>
               {getAvailableOptions().map(option => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
