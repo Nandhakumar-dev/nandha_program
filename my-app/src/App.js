@@ -1,44 +1,35 @@
 import React, { useState } from 'react';
 import './App.css';
-import { Drawer, Button, Input, Select } from 'antd';
 import 'antd/dist/reset.css';
-import { message } from 'antd';
+import { Drawer, Button, Input, Select, message } from 'antd';
 const { Option } = Select;
 const App = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const [segmentName, setSegmentName] = useState("");
-  const [schemas, setSchemas] = useState([]);
-  const [newSchema, setNewSchema] = useState(null);
-  const showDrawer = () => {
-    setDrawerVisible(true);
-  };
+  const [segmentName, setSegmentName] = useState('');
+  const [schemas, setSchemas] = useState([{ key: 0, value: null }]);
+  const showDrawer = () => { setDrawerVisible(true); };
   const closeDrawer = () => {
     setDrawerVisible(false);
-    setSegmentName("");
-    setSchemas([]);
-    setNewSchema(null);
+    setSegmentName('');
+    setSchemas([{ key: 0, value: null }]);
   };
   const handleSegmentNameChange = (e) => {
     setSegmentName(e.target.value);
   };
-  const handleNewSchemaChange = (value) => {
-    setNewSchema(value);
+  const handleSchemaChange = (index, value) => {
+    const newSchemas = [...schemas];
+    newSchemas[index].value = value;
+    setSchemas(newSchemas);
   };
   const addNewSchema = () => {
-    if (newSchema && !schemas.includes(newSchema)) {
-      console.log("Adding new schema:", newSchema);
-      setSchemas([...schemas, newSchema]);
-      setNewSchema(null);
-    }
+    setSchemas([...schemas, { key: schemas.length, value: null }]);
   };
   const removeSchema = (index) => {
-    const schemaToRemove = schemas[index];
     const updatedSchemas = schemas.filter((_, i) => i !== index);
     setSchemas(updatedSchemas);
-    setNewSchema(schemaToRemove);
   };
-  const getAvailableOptions = () => {
-    const selectedValues = new Set(schemas);
+  const getAvailableOptions = (index) => {
+    const selectedValues = new Set(schemas.filter((_, i) => i !== index).map(schema => schema.value));
     return [
       { label: 'First Name', value: 'first_name' },
       { label: 'Last Name', value: 'last_name' },
@@ -51,24 +42,25 @@ const App = () => {
   };
   const handleSubmit = async () => {
     if (!segmentName) {
-      message.error("Please enter the name of the segment!");
+      message.error('Please enter the name of the segment!');
       return;
     }
-    if (schemas.length === 0) {
-      message.error("Please add at least one schema to the segment!");
+    const validSchemas = schemas.filter(schema => schema.value !== null);
+    if (validSchemas.length === 0) {
+      message.error('Please add at least one schema to the segment!');
       return;
     }
-    const formattedSchemas = schemas.map(schema => {
+    const formattedSchemas = validSchemas.map(schema => {
       const label = {
-        first_name: "First name",
-        last_name: "Last name",
-        gender: "Gender",
-        age: "Age",
-        account_name: "Account Name",
-        city: "City",
-        state: "State"
-      }[schema];
-      return { [schema]: label };
+        first_name: 'First name',
+        last_name: 'Last name',
+        gender: 'Gender',
+        age: 'Age',
+        account_name: 'Account Name',
+        city: 'City',
+        state: 'State'
+      }[schema.value];
+      return { [schema.value]: label };
     });
     const data = {
       segment_name: segmentName,
@@ -89,19 +81,20 @@ const App = () => {
         throw new Error('Network response was not ok!');
       }
       const result = await response.json();
-      console.log('Success:', result);
+      console.log('result---->:', result);
       alert('Segment saved successfully!');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error---->', error);
       alert('Network Error saving segment!');
     } finally {
+      setSchemas([{ key: 0, value: null }]);
       closeDrawer();
     }
   };
   return (
     <div className="App">
       <header className="App-header">
-        <Button type="primary" onClick={showDrawer}>Save segment</Button>
+        <Button type="primary" onClick={showDrawer}> Save segment </Button>
       </header>
       <Drawer title="Saving Segment" placement="right" onClose={closeDrawer} visible={drawerVisible} width={400}>
         <p>Enter the name of the Segment</p>
@@ -111,10 +104,10 @@ const App = () => {
           <span className="user-dot"></span> -User Tracks
           <span className="group-dot"></span> -Group Tracks
         </div>
-        {schemas.length > 0 && schemas.map((schema, index) => (
-          <div key={index} className="schema-item">
-            <Select value={schema} style={{ width: 'calc(100% - 30px)', marginRight: 10 }}>
-              {getAvailableOptions().map(option => (
+        {schemas.map((schema, index) => (
+          <div key={schema.key} className="schema-item">
+            <Select value={schema.value} onChange={(value) => handleSchemaChange(index, value)} style={{ width: 'calc(100% - 30px)', marginRight: 10 }} placeholder="Add schema to segment" >
+              {getAvailableOptions(index).map((option) => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
                 </Option>
@@ -123,22 +116,13 @@ const App = () => {
             <div className="delete-box" onClick={() => removeSchema(index)}> &#8722; </div>
           </div>
         ))}
-        <Select placeholder="Add schema to segment" value={newSchema} onChange={handleNewSchemaChange} style={{ width: '100%', marginBottom: 20 }}>
-          {getAvailableOptions().map(option => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
-            </Option>
-          ))}
-        </Select>
-        <Button type="link" onClick={addNewSchema}>+ Add new schema</Button>
-        <div style={{
-          position: 'absolute', bottom: 20, left: 20, width: '100%', display: 'flex', justifyContent: 'flex-start'
-        }}>
-          <Button style={{ marginRight: 8 }} type="primary" onClick={handleSubmit}> Save the Segment</Button>
-          <Button onClick={closeDrawer}> Cancel </Button>
+        <Button type="link" onClick={addNewSchema}> + Add new schema </Button>
+        <div style={{ position: 'absolute', bottom: 20, left: 20, width: '100%', display: 'flex', justifyContent: 'flex-start' }} >
+          <Button style={{ marginRight: 8 }} type="primary" onClick={handleSubmit}> Save the Segment </Button>
+          <Button onClick={closeDrawer}>Cancel</Button>
         </div>
       </Drawer>
     </div>
   );
-}
+};
 export default App;
