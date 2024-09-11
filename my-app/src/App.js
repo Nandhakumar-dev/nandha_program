@@ -69,7 +69,7 @@ const App = () => {
     console.log("success---->", data);
     const webhookUrl = 'https://webhook.site/cd4091f4-8512-434b-8a77-9e621f3582ee';
     try {
-      const response = await fetch(webhookUrl, {
+      await fetch(webhookUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: {
@@ -77,12 +77,12 @@ const App = () => {
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) {
-        throw new Error('Network response was not ok!');
-      }
-      const result = await response.json();
-      console.log('result---->:', result);
-      alert('Segment saved successfully!');
+      // if (!response.ok) {
+      //   throw new Error('Network response was not ok!');
+      // }
+      // const result = await response.json();
+      // console.log('result---->:', result);
+      message.success('Data sent successfully!');
     } catch (error) {
       console.error('Error---->', error);
       alert('Network Error saving segment!');
