@@ -22,6 +22,13 @@ const App = () => {
     setSchemas(newSchemas);
   };
   const addNewSchema = () => {
+    if (schemas.length > 0) {
+      const lastSchema = schemas[schemas.length - 1];
+      if (lastSchema.value === null) {
+        message.error('Please select a schema before adding a new one!');
+        return;
+      }
+    }
     setSchemas([...schemas, { key: schemas.length, value: null }]);
   };
   const removeSchema = (index) => {
