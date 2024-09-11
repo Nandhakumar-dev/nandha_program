@@ -6,37 +6,34 @@ const { Option } = Select;
 const App = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [segmentName, setSegmentName] = useState('');
-  const [schemas, setSchemas] = useState([{ key: 0, value: null }]);
-  const showDrawer = () => { setDrawerVisible(true); };
+  const [schemas, setSchemas] = useState([{ key: Date.now(), value: null }]);
+  const showDrawer = () => setDrawerVisible(true);
   const closeDrawer = () => {
     setDrawerVisible(false);
     setSegmentName('');
-    setSchemas([{ key: 0, value: null }]);
+    setSchemas([{ key: Date.now(), value: null }]);
   };
-  const handleSegmentNameChange = (e) => {
-    setSegmentName(e.target.value);
-  };
-  const handleSchemaChange = (index, value) => {
-    const newSchemas = [...schemas];
-    newSchemas[index].value = value;
-    setSchemas(newSchemas);
+  const handleSegmentNameChange = (e) => setSegmentName(e.target.value);
+  const handleSchemaChange = (key, value) => {
+    setSchemas((prevSchemas) =>
+      prevSchemas.map((schema) =>
+        schema.key === key ? { ...schema, value } : schema
+      )
+    );
   };
   const addNewSchema = () => {
-    if (schemas.length > 0) {
-      const lastSchema = schemas[schemas.length - 1];
-      if (lastSchema.value === null) {
-        message.error('Please select a schema before adding a new one!');
-        return;
-      }
+    const lastSchema = schemas[schemas.length - 1];
+    if (lastSchema && lastSchema.value === null) {
+      message.error('Please select a schema before adding a new one!');
+      return;
     }
-    setSchemas([...schemas, { key: schemas.length, value: null }]);
+    setSchemas([...schemas, { key: Date.now(), value: null }]);
   };
-  const removeSchema = (index) => {
-    const updatedSchemas = schemas.filter((_, i) => i !== index);
-    setSchemas(updatedSchemas);
+  const removeSchema = (key) => {
+    setSchemas((prevSchemas) => prevSchemas.filter((schema) => schema.key !== key));
   };
-  const getAvailableOptions = (index) => {
-    const selectedValues = new Set(schemas.filter((_, i) => i !== index).map(schema => schema.value));
+  const getAvailableOptions = (key) => {
+    const selectedValues = new Set(schemas.filter((schema) => schema.key !== key).map(schema => schema.value));
     return [
       { label: 'First Name', value: 'first_name' },
       { label: 'Last Name', value: 'last_name' },
@@ -94,7 +91,7 @@ const App = () => {
       console.error('Error---->', error);
       alert('Network Error saving segment!');
     } finally {
-      setSchemas([{ key: 0, value: null }]);
+      setSchemas([{ key: Date.now(), value: null }]);
       closeDrawer();
     }
   };
@@ -111,20 +108,20 @@ const App = () => {
           <span className="user-dot"></span> -User Tracks
           <span className="group-dot"></span> -Group Tracks
         </div>
-        {schemas.map((schema, index) => (
+        {schemas.map((schema) => (
           <div key={schema.key} className="schema-item">
-            <Select value={schema.value} onChange={(value) => handleSchemaChange(index, value)} style={{ width: 'calc(100% - 30px)', marginRight: 10 }} placeholder="Add schema to segment" >
-              {getAvailableOptions(index).map((option) => (
+            <Select value={schema.value} onChange={(value) => handleSchemaChange(schema.key, value)} style={{ width: 'calc(100% - 30px)', marginRight: 10 }} placeholder="Add schema to segment">
+              {getAvailableOptions(schema.key).map((option) => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
                 </Option>
               ))}
             </Select>
-            <div className="delete-box" onClick={() => removeSchema(index)}> &#8722; </div>
+            <div className="delete-box" onClick={() => removeSchema(schema.key)}> &#8722; </div>
           </div>
         ))}
         <Button type="link" onClick={addNewSchema}> + Add new schema </Button>
-        <div style={{ position: 'absolute', bottom: 20, left: 20, width: '100%', display: 'flex', justifyContent: 'flex-start' }} >
+        <div style={{ position: 'absolute', bottom: 20, left: 20, width: '100%', display: 'flex', justifyContent: 'flex-start' }}>
           <Button style={{ marginRight: 8 }} type="primary" onClick={handleSubmit}> Save the Segment </Button>
           <Button onClick={closeDrawer}>Cancel</Button>
         </div>
