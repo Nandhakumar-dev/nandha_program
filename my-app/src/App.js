@@ -71,7 +71,7 @@ const App = () => {
       schema: formattedSchemas
     };
     console.log("success---->", data);
-    const webhookUrl = 'https://webhook.site/cd4091f4-8512-434b-8a77-9e621f3582ee';
+    const webhookUrl = 'https://webhook.site/f8dcf901-bc20-4b01-b25f-97d6b25c9a56';
     try {
       await fetch(webhookUrl, {
         method: 'POST',
@@ -100,30 +100,41 @@ const App = () => {
       <header className="App-header">
         <Button type="primary" onClick={showDrawer}> Save segment </Button>
       </header>
-      <Drawer title="Saving Segment" placement="right" onClose={closeDrawer} visible={drawerVisible} width={400}>
-        <p>Enter the name of the Segment</p>
-        <Input placeholder="Name of the segment" value={segmentName} onChange={handleSegmentNameChange} style={{ marginBottom: 20 }} />
-        <p>To save your segment, you need to add the schemas to build the query</p>
-        <div className="dot-container">
-          <span className="user-dot"></span> -User Tracks
-          <span className="group-dot"></span> -Group Tracks
-        </div>
-        {schemas.map((schema) => (
-          <div key={schema.key} className="schema-item">
-            <Select value={schema.value} onChange={(value) => handleSchemaChange(schema.key, value)} style={{ width: 'calc(100% - 30px)', marginRight: 10 }} placeholder="Add schema to segment">
-              {getAvailableOptions(schema.key).map((option) => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
-            <div className="delete-box" onClick={() => removeSchema(schema.key)}> &#8722; </div>
+      <Drawer title="Saving Segment" placement="right" onClose={closeDrawer} visible={drawerVisible} width={400} closeIcon={<span className="custom-close-icon">&lt;</span>}>
+        <div className="drawer-content">
+          <p>Enter the name of the Segment</p>
+          <Input placeholder="Name of the segment" value={segmentName} onChange={handleSegmentNameChange} style={{ marginBottom: 20 }} />
+          <p>To save your segment, you need to add the schemas to build the query</p>
+          <div className="dot-container">
+            <span className="user-dot"></span> - User Tracks
+            <span className="group-dot"></span> - Group Tracks
           </div>
-        ))}
-        <Button type="link" onClick={addNewSchema}> + Add new schema </Button>
-        <div style={{ position: 'absolute', bottom: 20, left: 20, width: '100%', display: 'flex', justifyContent: 'flex-start' }}>
-          <Button style={{ marginRight: 8 }} type="primary" onClick={handleSubmit}> Save the Segment </Button>
-          <Button onClick={closeDrawer}>Cancel</Button>
+          {schemas.map((schema) => {
+            const isSelected = schema.value !== null;
+            const dotClass = isSelected
+              ? schema.value === 'account_name' || schema.value === 'state' || schema.value === 'city'
+                ? 'red-dot'
+                : 'green-dot'
+              : 'white-dot';
+            return (
+              <div key={schema.key} className="schema-item">
+                <span className={`dot ${dotClass}`}></span>
+                <Select value={schema.value} onChange={(value) => handleSchemaChange(schema.key, value)} style={{ width: 'calc(100% - 30px)', marginRight: 10 }} placeholder="Add schema to segment">
+                  {getAvailableOptions(schema.key).map((option) => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+                <div className="delete-box" onClick={() => removeSchema(schema.key)}> <span>&#8722;</span> </div>
+              </div>
+            );
+          })}
+          <Button className="add-new-schema" type="link" onClick={addNewSchema}> + Add new schema </Button>
+          <div className="footer-buttons">
+            <Button className="save-segment-button" type="primary" onClick={handleSubmit}> Save the Segment </Button>
+            <Button className="cancel-button" onClick={closeDrawer}>Cancel</Button>
+          </div>
         </div>
       </Drawer>
     </div>
