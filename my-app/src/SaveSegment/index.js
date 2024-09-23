@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../App.css';
-import { Drawer, Button, Input, Select, message } from 'antd';
+import { Drawer, Button, Input, Select, message, Spin } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSegmentName, setSchemas, addSchema } from '../redux/segmentSlice';
 const { Option } = Select;
@@ -8,6 +8,7 @@ const SaveSegment = ({ drawerVisible, closeDrawer }) => {
     const dispatch = useDispatch();
     const segmentName = useSelector((state) => state.segment.segmentName);
     const schemas = useSelector((state) => state.segment.schemas);
+    const [loading, setLoading] = useState(false);
     const handleSegmentNameChange = (e) => dispatch(setSegmentName(e.target.value));
     const handleSchemaChange = (key, value) => {
         dispatch(setSchemas(
@@ -49,6 +50,7 @@ const SaveSegment = ({ drawerVisible, closeDrawer }) => {
             message.error('Please add at least one schema to the segment!');
             return;
         }
+        setLoading(true);
         const formattedSchemas = validSchemas.map((schema) => {
             const label = {
                 first_name: 'First name',
@@ -86,49 +88,57 @@ const SaveSegment = ({ drawerVisible, closeDrawer }) => {
             console.error('Error---->', error);
             alert('Network Error saving segment!');
         } finally {
+            setLoading(false);
             setSchemas([{ key: Date.now(), value: null }]);
             closeDrawer();
         }
     };
     return (
-        <Drawer title="Saving Segment" placement="right" onClose={closeDrawer} visible={drawerVisible} width={400} closeIcon={<span className="custom-close-icon">&lt;</span>}>
-            <div className="drawer-content">
-                <p>Enter the name of the Segment</p>
-                <Input placeholder="Name of the segment" value={segmentName} onChange={handleSegmentNameChange} style={{ marginBottom: 20 }} />
-                <p>To save your segment, you need to add the schemas to build the query</p>
-                <div className="dot-container">
-                    <span className="user-dot"></span> - User Tracks
-                    <span className="group-dot"></span> - Group Tracks
+        <div>
+            {loading && (
+                <div className="loading-overlay">
+                    <Spin size="large" />
                 </div>
-                {schemas.map((schema) => {
-                    const isSelected = schema.value !== null;
-                    const dotClass = isSelected
-                        ? schema.value === 'account_name' || schema.value === 'state' || schema.value === 'city'
-                            ? 'red-dot'
-                            : 'green-dot'
-                        : 'white-dot';
-                    return (
-                        <div key={schema.key} className="schema-item">
-                            <span className={`dot ${dotClass}`}></span>
-                            <Select value={schema.value} onChange={(value) => handleSchemaChange(schema.key, value)} style={{ width: 'calc(100% - 30px)', marginRight: 10 }} placeholder="Add schema to segment" >
-                                {getAvailableOptions(schema.key).map((option) => (
-                                    <Option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </Option>
-                                ))}
-                            </Select>
-                            <div className="delete-box" onClick={() => removeSchema(schema.key)}> <span>&#8722;</span>
+            )}
+            <Drawer title="Saving Segment" placement="right" onClose={closeDrawer} visible={drawerVisible} width={400} closeIcon={<span className="custom-close-icon">&lt;</span>}>
+                <div className="drawer-content">
+                    <p>Enter the name of the Segment</p>
+                    <Input placeholder="Name of the segment" value={segmentName} onChange={handleSegmentNameChange} style={{ marginBottom: 20 }} />
+                    <p>To save your segment, you need to add the schemas to build the query</p>
+                    <div className="dot-container">
+                        <span className="user-dot"></span> - User Tracks
+                        <span className="group-dot"></span> - Group Tracks
+                    </div>
+                    {schemas.map((schema) => {
+                        const isSelected = schema.value !== null;
+                        const dotClass = isSelected
+                            ? schema.value === 'account_name' || schema.value === 'state' || schema.value === 'city'
+                                ? 'red-dot'
+                                : 'green-dot'
+                            : 'white-dot';
+                        return (
+                            <div key={schema.key} className="schema-item">
+                                <span className={`dot ${dotClass}`}></span>
+                                <Select value={schema.value} onChange={(value) => handleSchemaChange(schema.key, value)} style={{ width: 'calc(100% - 30px)', marginRight: 10 }} placeholder="Add schema to segment" >
+                                    {getAvailableOptions(schema.key).map((option) => (
+                                        <Option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </Option>
+                                    ))}
+                                </Select>
+                                <div className="delete-box" onClick={() => removeSchema(schema.key)}> <span>&#8722;</span>
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
-                <Button className="add-new-schema" type="link" onClick={addNewSchema}> + Add new schema </Button>
-                <div className="footer-buttons">
-                    <Button className="save-segment-button" type="primary" onClick={handleSubmit}> Save the Segment </Button>
-                    <Button className="cancel-button" onClick={closeDrawer}> Cancel </Button>
+                        );
+                    })}
+                    <Button className="add-new-schema" type="link" onClick={addNewSchema}> + Add new schema </Button>
+                    <div className="footer-buttons">
+                        <Button className="save-segment-button" type="primary" onClick={handleSubmit}> Save the Segment </Button>
+                        <Button className="cancel-button" onClick={closeDrawer}> Cancel </Button>
+                    </div>
                 </div>
-            </div>
-        </Drawer>
+            </Drawer>
+        </div>
     );
 };
 export default SaveSegment;
